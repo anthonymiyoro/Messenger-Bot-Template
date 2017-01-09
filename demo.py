@@ -2,7 +2,29 @@ import gym
 import universe
 import random
 
-def determine_turn(turn, j, total_sum, reward, prev_total_sum, observation_n)
+def determine_turn(turn, j, total_sum, reward, prev_total_sum, observation_n):
+
+	# after every 15 or more iterations, get the average.
+	if (j >=  15):
+
+	# if you havent crashed at all then turn = True else
+		if(total_sum/ j) == 0:
+			turn = True
+		else:
+			turn = False
+
+	# reset variables after the 15 iterations
+		total_sum = 0
+		j = 0
+		prev_total_sum = total_sum
+
+	else:
+		turn = False
+	if (observation_n != None):
+		# produce sum of rewards and turnsx
+		j+=1
+		total_sum += reward_n
+	return(turn, j, total_sum, prev_total_sum)
 
 
 def main():
@@ -37,12 +59,13 @@ def main():
 	    		# put the reward in prev_score
 	    		prev_score = reward_n[0]
 
-	    		# if turn is true, pick a random event
+	    		# should we turn?
 	    		if(turn):
+	    			# if so, pick random turn
 	    			event = random.choice([left, right])
 	    			# perform an action
 	    			action_n = [event for ob in observation_n]
-	    			# return turn to false
+	    			# return turn to false because weve just turned
 	    			turn = False
 
 		# if no turn is needed go forward
