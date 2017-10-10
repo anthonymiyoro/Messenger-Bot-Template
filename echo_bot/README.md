@@ -1,34 +1,5 @@
-# FB Messenger demo
+## MY STEPS
 
-Create a FB app and page for your bot (follow the instructions in the fbmessenger readme)
-
-Assuming you are using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/)
- 
- 	mkdir messenger-demo
- 	cd messenger-demo
- 	mkvirtualenv -a . messenger-demo
- 	
-Edit your `postactivate` file which will be in a location similar to `~/.virtualenvs/messenger-demo/bin/postactivate`
-
-Add the following environment variables
-
-	export FB_PAGE_TOKEN=<YOUR_FB_PAGE_TOKEN>
-	export FB_VERIFY_TOKEN=<YOUR_ FB_VERIFY_TOKEN>
-
-Run the app
-
-	python main.py
-	
-You can deploy this to a server or use [ngrok](https://ngrok.com/) to proxy Facebok requests to your localhost for testing
-
-To setup the bot hit the follwing url in a browser
-
-	https://<YOUR_DOMAIN>/webhook?hub.verify_token=<YOUR_ FB_VERIFY_TOKEN>&init=true
-	
-Set your Messenger app webhook to
-	
-	https://<YOUR_DOMAIN>/webhook
-	
 ## MY STEPS TAKEN
 
 - Download folder
@@ -91,10 +62,41 @@ Set your Messenger app webhook to
    
    To send a message, hover on the send message button and click test button
    
-  
-   
-   
-   
- 
+
+
+
+## GENERIC STEPS
+
+### Setting
+```
+virtualenv env
+source env/bin/activate
+pip install -r requirements.txt
+```
+
+### Edit config.py
+```
+CONFIG = {
+    'FACEBOOK_TOKEN': 'YOUR_FACEBOOK_TOKEN',
+    'VERIFY_TOKEN': 'YOUR_VERIFY_TOKEN',
+    'SERVER_URL': 'https://YOUR_HOSTNAME'
+}
+```
+
+### Run
+```
+python server.py
+
+# default web server port 8080
+```
+
+
+<a name="facebook-app-setup"></a>
+### Facebook app setup
+
+- [Create a page](https://www.facebook.com/pages/create/) for your app, if you don't already have one
+- [Create an app](https://developers.facebook.com/quickstarts/?platform=web)
+- Add the Messenger product
+- Select the Page to generate a page token
 
 
