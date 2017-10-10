@@ -4,8 +4,6 @@
 
 There will be different types of bot templates;
 
-- A hosted bot with no replies
-
 - A simple chat bot template (echo bot)
 
 - An image based bot template (returns images, and quick replies, etc.)
