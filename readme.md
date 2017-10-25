@@ -1,18 +1,14 @@
-## Bot Builder
+## Facebook Community Bot
 
-### This is application provides a basic template to help developers get started on building their bots.
+### This is a bot that allows members of a developer circle to connect with each other
 
-There will be different types of bot templates;
+It has the following functionality;
 
-- A simple chat bot template (echo bot)
+- View previous events, what they entailed and any slides if available.
 
-- An image based bot template (returns images, and quick replies, etc.)
+- Remind you of future events, their location and their topics.
 
-- A shopping based bot template
+- Connect with devs from your community circle via github.
 
-It will only be using the Facebook NLP engine and the basic idea is to have a python bot readily
-set up at the click of a button.
+Uses Pythons' FBMQ Messenger library with instructions from [here!](https://github.com/conbus/fbmq)
 
-You will be able to run the bot from your computer using ngrok as shown in the instructions that will be provided.
-
-To set it up, all you need to is put in your Facebook developer ID and you'll have a bot ready in seconds!
