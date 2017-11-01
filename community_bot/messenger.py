@@ -135,7 +135,11 @@ def send_message(recipient_id, text):
         "read receipt": send_read_receipt,
         "typing on": send_typing_on,
         "typing off": send_typing_off,
-        "account linking": send_account_linking
+        "account linking": send_account_linking,
+        'persistent':page.show_persistent_menu([Template.ButtonPostBack('MENU1', 'MENU_PAYLOAD/1'),
+                           Template.ButtonPostBack('MENU2', 'MENU_PAYLOAD/2')]),
+        "start": page.show_starting_button("START_PAYLOAD")
+        
     }
 
     if text in special_keywords:
@@ -262,7 +266,6 @@ def send_quick_reply(recipient):
                              QuickReply(title="Comedy", payload="PICK_COMEDY")],
               metadata="DEVELOPER_DEFINED_METADATA")
 
-
 @page.callback(['PICK_ACTION'])
 def callback_picked_genre(payload, event):
     print(payload, event)
@@ -288,3 +291,13 @@ def send_account_linking(recipient):
 
 def send_text_message(recipient, text):
     page.send(recipient, text, metadata="DEVELOPER_DEFINED_METADATA")
+
+
+@page.callback(['MENU_PAYLOAD/(.+)'])
+def click_persistent_menu(payload, event):
+  click_menu = payload.split('/')[1]
+  print("you clicked %s menu" % click_menu)
+
+@page.callback(['START_PAYLOAD'])
+def start_callback(payload, event):
+  print("Let's start!")
