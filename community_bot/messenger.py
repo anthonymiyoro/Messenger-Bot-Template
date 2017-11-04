@@ -66,7 +66,7 @@ def received_message(event):
         print("quick reply for message %s with payload %s" % (message_id, quick_reply_payload))
 
         page.send(sender_id, "Quick reply tapped")
-
+    # Duplicate messege sent
     if message_text:
         send_message(sender_id, message_text)
     elif message_attachments:
@@ -129,17 +129,15 @@ def send_message(recipient_id, text):
         "video": send_video,
         "file": send_file,
         "button": send_button,
-        "generic": send_generic,
         "receipt": send_receipt,
-        "quick reply": send_quick_reply,
         "read receipt": send_read_receipt,
         "typing on": send_typing_on,
         "typing off": send_typing_off,
-        "account linking": send_account_linking,
-        'persistent':page.show_persistent_menu([Template.ButtonPostBack('MENU1', 'MENU_PAYLOAD/1'),
-                           Template.ButtonPostBack('MENU2', 'MENU_PAYLOAD/2')]),
-        "start": page.show_starting_button("START_PAYLOAD")
-        
+        "branch": show_branch,
+        "hotel": show_hotel_room,
+        "confirm": confirm,
+        "account linking": send_account_linking
+
     }
 
     if text in special_keywords:
@@ -193,31 +191,6 @@ def callback_clicked_button(payload, event):
     print(payload, event)
 
 
-def send_generic(recipient):
-    page.send(recipient, Template.Generic([
-        Template.GenericElement("rift",
-                                subtitle="Next-generation virtual reality",
-                                item_url="https://www.oculus.com/en-us/rift/",
-                                image_url=CONFIG['SERVER_URL'] + "/assets/rift.png",
-                                buttons=[
-                                    Template.ButtonWeb("Open Web URL", "https://www.oculus.com/en-us/rift/"),
-                                    Template.ButtonPostBack("tigger Postback", "DEVELOPED_DEFINED_PAYLOAD"),
-                                    Template.ButtonPhoneNumber("Call Phone Number", "+16505551234")
-                                ]),
-        Template.GenericElement("touch",
-                                subtitle="Your Hands, Now in VR",
-                                item_url="https://www.oculus.com/en-us/touch/",
-                                image_url=CONFIG['SERVER_URL'] + "/assets/touch.png",
-                                buttons=[
-                                    {'type': 'web_url', 'title': 'Open Web URL',
-                                     'value': 'https://www.oculus.com/en-us/rift/'},
-                                    {'type': 'postback', 'title': 'tigger Postback',
-                                     'value': 'DEVELOPED_DEFINED_PAYLOAD'},
-                                    {'type': 'phone_number', 'title': 'Call Phone Number', 'value': '+16505551234'},
-                                ])
-    ]))
-
-
 def send_receipt(recipient):
     receipt_id = "order1357"
     element = Template.ReceiptElement(title="Oculus Rift",
@@ -253,7 +226,7 @@ def send_receipt(recipient):
                                           adjustments=[adjustment]))
 
 
-def send_quick_reply(recipient):
+def confirm(recipient):
     """
     shortcuts are supported
     page.send(recipient, "What's your favorite movie genre?",
@@ -261,10 +234,11 @@ def send_quick_reply(recipient):
                                {'title': 'Comedy', 'payload': 'PICK_COMEDY'}, ],
                 metadata="DEVELOPER_DEFINED_METADATA")
     """
-    page.send(recipient, "What's your favorite movie genre?",
-              quick_replies=[QuickReply(title="Action", payload="PICK_ACTION"),
-                             QuickReply(title="Comedy", payload="PICK_COMEDY")],
+    page.send(recipient, "Confirm your selection.",
+              quick_replies=[QuickReply(title="Confirm", payload="CONFIRM"),
+                             QuickReply(title="Cancel", payload="CANCEL")],
               metadata="DEVELOPER_DEFINED_METADATA")
+
 
 @page.callback(['PICK_ACTION'])
 def callback_picked_genre(payload, event):
@@ -293,11 +267,66 @@ def send_text_message(recipient, text):
     page.send(recipient, text, metadata="DEVELOPER_DEFINED_METADATA")
 
 
-@page.callback(['MENU_PAYLOAD/(.+)'])
-def click_persistent_menu(payload, event):
-  click_menu = payload.split('/')[1]
-  print("you clicked %s menu" % click_menu)
 
-@page.callback(['START_PAYLOAD'])
-def start_callback(payload, event):
-  print("Let's start!")
+def show_branch(recipient):
+    page.send(recipient, Template.Generic([
+        Template.GenericElement("Seven Suns Hotel Template",
+                                subtitle="Nairobi Branch",
+                                item_url="https://sevensuns.com",
+                                image_url="https://taj.tajhotels.com/content/dam/luxury/hotels/Taj_Mahal_Delhi/images/4x3/HotelFacade4x3.jpg",
+                                buttons=[
+                                    # Template.ButtonWeb("Open Web URL", "https://www.oculus.com/en-us/rift/"),
+                                    Template.ButtonPostBack("Select Branch", "SELECT_BRANCH_1"),
+                                    Template.ButtonPhoneNumber("Call Branch", "+16505551234")
+                                ]),
+        Template.GenericElement("Seven Suns Hotel Template",
+                                subtitle="Mombasa Branch",
+                                item_url="https://sevensuns.com",
+                                image_url="https://www.safarihotelsnamibia.com/wp-content/uploads/2014/11/Safari-Court-Hotel-Pool.jpg",
+                                buttons=[
+                                    # {'type': 'web_url', 'title': 'Open Web URL',
+                                    #  'value': 'https://www.oculus.com/en-us/rift/'},
+                                    {'type': 'postback', 'title': 'Select Branch',
+                                     'value': 'SELECT_BRANCH_2'},
+                                    {'type': 'phone_number', 'title': 'Call Branch', 'value': '+16505551234'},
+                                ])
+    ]))
+
+
+def show_hotel_room(recipient):
+    page.send(recipient, Template.Generic([
+        Template.GenericElement("Seven Suns Hotel Template",
+                                subtitle="Basic Suite",
+                                item_url="https://sevensuns.com",
+                                image_url="http://www.vhotel.sg/Bencoolen/scripts/images/accomodations/rooms/b_twin_display.jpg",
+                                buttons=[
+                                    # Template.ButtonWeb("Open Web URL", "https://www.oculus.com/en-us/rift/"),
+                                    Template.ButtonPostBack("Select Room", "SELECT_ROOM_1")
+                                    # Template.ButtonPhoneNumber("Call Branch", "+16505551234")
+                                ]),
+        Template.GenericElement("Seven Suns Hotel Template",
+                                subtitle="Deluxe Suite",
+                                item_url="https://sevensuns.com",
+                                image_url="http://www.vhotel.sg/Bencoolen/scripts/images/accomodations/rooms/b_premier_display.jpg",
+                                buttons=[
+                                    # {'type': 'web_url', 'title': 'Open Web URL',
+                                    #  'value': 'https://www.oculus.com/en-us/rift/'},
+                                    {'type': 'postback', 'title': 'Select Room',
+                                     'value': 'SELECT_ROOM_2'},
+                                    # {'type': 'phone_number', 'title': 'Call Branch', 'value': '+16505551234'},
+                                ]),
+        Template.GenericElement("Seven Suns Hotel Template",
+                                subtitle="Premium Suite",
+                                item_url="https://sevensuns.com",
+                                image_url="http://www.vhotel.sg/Bencoolen/scripts/images/accomodations/rooms/b_patio_display.jpg",
+                                buttons=[
+                                    # {'type': 'web_url', 'title': 'Open Web URL',
+                                    #  'value': 'https://www.oculus.com/en-us/rift/'},
+                                    {'type': 'postback', 'title': 'Select Room',
+                                     'value': 'SELECT_ROOM_3'},
+                                    # {'type': 'phone_number', 'title': 'Call Branch', 'value': '+16505551234'},
+                                ])
+    ]))
+
+
+
