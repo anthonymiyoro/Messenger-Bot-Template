@@ -7,6 +7,8 @@ import json
 from config import CONFIG
 from fbmq import Attachment, Template, QuickReply, NotificationType
 from fbpage import page
+import requests
+
 
 USER_SEQ = {}
 
@@ -62,11 +64,23 @@ def received_message(event):
         USER_SEQ[seq_id] = seq
 
     if quick_reply:
-        quick_reply_payload = quick_reply.get('payload')
-        print("quick reply for message %s with payload %s" % (message_id, quick_reply_payload))
 
-        page.send(sender_id, "Quick reply tapped")
-    # Duplicate messege sent
+        quick_reply_payload = quick_reply.get('payload')
+        if quick_reply_payload == 'CONFIRM':
+            book_another(sender_id)
+            print("quick reply for message %s with payload %s" % (message_id, quick_reply_payload))
+
+        elif quick_reply_payload == 'BOOK_ANOTHER_ROOM':
+            show_hotel_room(sender_id)
+
+        elif quick_reply_payload == 'RESERVATION':
+            send_receipt(sender_id)
+
+        elif quick_reply_payload == 'CANCEL':
+            show_hotel_room(sender_id)
+        else:
+            print("quick reply for message %s with payload %s" % (message_id, quick_reply_payload))
+
     if message_text:
         send_message(sender_id, message_text)
     elif message_attachments:
@@ -86,6 +100,12 @@ def received_delivery_confirmation(event):
     print("All message before %s were delivered." % watermark)
 
 
+def send_text_callback(payload, response):
+    print("SEND CALLBACK")
+
+
+# Reacts to postback buttons NOT QuickReply
+# Add postback button payloads in if statements
 @page.handle_postback
 def received_postback(event):
     sender_id = event.sender_id
@@ -94,49 +114,39 @@ def received_postback(event):
 
     payload = event.postback_payload
 
+    if payload == "SELECT_BRANCH":
+        select_room_message(sender_id,event)
+        show_hotel_room(sender_id)
+
+    elif payload == "SELECT_ROOM":
+        book_another(sender_id)
+        # confirm
+
+    elif payload == "START_PAYLOAD":
+        send_welcome_messege(sender_id, event)
+        show_branch(sender_id)
+
+    elif payload == "BOOK_ROOM":
+        show_hotel_room(sender_id)
+
+    elif payload == "RESERVATION":
+        send_receipt(sender_id)
+        last_messege(sender_id)
+
+    elif payload == "START_AGAIN":
+        show_hotel_room(sender_id)
+
     print("Received postback for user %s and page %s with payload '%s' at %s"
           % (sender_id, recipient_id, payload, time_of_postback))
 
-    page.send(sender_id, "Postback called")
-
-
-@page.handle_read
-def received_message_read(event):
-    watermark = event.read.get("watermark")
-    seq = event.read.get("seq")
-
-    print("Received message read event for watermark %s and sequence number %s" % (watermark, seq))
-
-
-@page.handle_account_linking
-def received_account_link(event):
-    sender_id = event.sender_id
-    status = event.account_linking.get("status")
-    auth_code = event.account_linking.get("authorization_code")
-
-    print("Received account link event with for user %s with status %s and auth code %s "
-          % (sender_id, status, auth_code))
-
 
 def send_message(recipient_id, text):
-    # If we receive a text message, check to see if it matches any special
-    # keywords and send back the corresponding example. Otherwise, just echo
-    # the text we received.
+    # Run function when corresponding word is typed in otherwise just echo the word
     special_keywords = {
-        "image": send_image,
-        "gif": send_gif,
-        "audio": send_audio,
-        "video": send_video,
-        "file": send_file,
         "button": send_button,
         "receipt": send_receipt,
-        "read receipt": send_read_receipt,
-        "typing on": send_typing_on,
-        "typing off": send_typing_off,
         "branch": show_branch,
         "hotel": show_hotel_room,
-        "confirm": confirm,
-        "account linking": send_account_linking
 
     }
 
@@ -144,30 +154,6 @@ def send_message(recipient_id, text):
         special_keywords[text](recipient_id)
     else:
         page.send(recipient_id, text, callback=send_text_callback, notification_type=NotificationType.REGULAR)
-
-
-def send_text_callback(payload, response):
-    print("SEND CALLBACK")
-
-
-def send_image(recipient):
-    page.send(recipient, Attachment.Image(CONFIG['SERVER_URL'] + "/assets/rift.png"))
-
-
-def send_gif(recipient):
-    page.send(recipient, Attachment.Image(CONFIG['SERVER_URL'] + "/assets/instagram_logo.gif"))
-
-
-def send_audio(recipient):
-    page.send(recipient, Attachment.Audio(CONFIG['SERVER_URL'] + "/assets/sample.mp3"))
-
-
-def send_video(recipient):
-    page.send(recipient, Attachment.Video(CONFIG['SERVER_URL'] + "/assets/allofus480.mov"))
-
-
-def send_file(recipient):
-    page.send(recipient, Attachment.File(CONFIG['SERVER_URL'] + "/assets/test.txt"))
 
 
 def send_button(recipient):
@@ -191,83 +177,29 @@ def callback_clicked_button(payload, event):
     print(payload, event)
 
 
-def send_receipt(recipient):
-    receipt_id = "order1357"
-    element = Template.ReceiptElement(title="Oculus Rift",
-                                      subtitle="Includes: headset, sensor, remote",
-                                      quantity=1,
-                                      price=599.00,
-                                      currency="USD",
-                                      image_url=CONFIG['SERVER_URL'] + "/assets/riftsq.png"
-                                      )
-
-    address = Template.ReceiptAddress(street_1="1 Hacker Way",
-                                      street_2="",
-                                      city="Menlo Park",
-                                      postal_code="94025",
-                                      state="CA",
-                                      country="US")
-
-    summary = Template.ReceiptSummary(subtotal=698.99,
-                                      shipping_cost=20.00,
-                                      total_tax=57.67,
-                                      total_cost=626.66)
-
-    adjustment = Template.ReceiptAdjustment(name="New Customer Discount", amount=-50)
-
-    page.send(recipient, Template.Receipt(recipient_name='Peter Chang',
-                                          order_number=receipt_id,
-                                          currency='USD',
-                                          payment_method='Visa 1234',
-                                          timestamp="1428444852",
-                                          elements=[element],
-                                          address=address,
-                                          summary=summary,
-                                          adjustments=[adjustment]))
-
-
-def confirm(recipient):
-    """
-    shortcuts are supported
-    page.send(recipient, "What's your favorite movie genre?",
-                quick_replies=[{'title': 'Action', 'payload': 'PICK_ACTION'},
-                               {'title': 'Comedy', 'payload': 'PICK_COMEDY'}, ],
-                metadata="DEVELOPER_DEFINED_METADATA")
-    """
-    page.send(recipient, "Confirm your selection.",
-              quick_replies=[QuickReply(title="Confirm", payload="CONFIRM"),
-                             QuickReply(title="Cancel", payload="CANCEL")],
-              metadata="DEVELOPER_DEFINED_METADATA")
-
-
-@page.callback(['PICK_ACTION'])
-def callback_picked_genre(payload, event):
-    print(payload, event)
-
-
-def send_read_receipt(recipient):
-    page.mark_seen(recipient)
-
-
-def send_typing_on(recipient):
-    page.typing_on(recipient)
-
-
-def send_typing_off(recipient):
-    page.typing_off(recipient)
-
-
-def send_account_linking(recipient):
-    page.send(recipient, Template.AccountLink(text="Welcome. Link your account.",
-                                              account_link_url=CONFIG['SERVER_URL'] + "/authorize",
-                                              account_unlink_button=True))
-
-
 def send_text_message(recipient, text):
     page.send(recipient, text, metadata="DEVELOPER_DEFINED_METADATA")
 
 
+# Welcome message when get started clicked
+def send_welcome_messege(recipient, event):
+    user_profile = page.get_user_profile(event.sender_id)  # return dict
+    print(user_profile)
 
+    text = "Hello " + user_profile['first_name'] + "! Welcome to the Hotel Test Bot. \n Please choose a preferred hotel branch. 🙂"
+    page.send(recipient, text, metadata="DEVELOPER_DEFINED_METADATA")
+
+
+# Message displayed when selecting a room
+def select_room_message(recipient, event):
+    user_profile = page.get_user_profile(event.sender_id)  # return dict
+    print(user_profile)
+
+    text = "Good Choice " + user_profile['first_name'] + "! \n Please select your preferred room."
+    page.send(recipient, text, metadata="DEVELOPER_DEFINED_METADATA")
+
+
+# Show different hotel branches
 def show_branch(recipient):
     page.send(recipient, Template.Generic([
         Template.GenericElement("Seven Suns Hotel Template",
@@ -276,7 +208,7 @@ def show_branch(recipient):
                                 image_url="https://taj.tajhotels.com/content/dam/luxury/hotels/Taj_Mahal_Delhi/images/4x3/HotelFacade4x3.jpg",
                                 buttons=[
                                     # Template.ButtonWeb("Open Web URL", "https://www.oculus.com/en-us/rift/"),
-                                    Template.ButtonPostBack("Select Branch", "SELECT_BRANCH_1"),
+                                    Template.ButtonPostBack("Select Branch", "SELECT_BRANCH"),
                                     Template.ButtonPhoneNumber("Call Branch", "+16505551234")
                                 ]),
         Template.GenericElement("Seven Suns Hotel Template",
@@ -287,12 +219,13 @@ def show_branch(recipient):
                                     # {'type': 'web_url', 'title': 'Open Web URL',
                                     #  'value': 'https://www.oculus.com/en-us/rift/'},
                                     {'type': 'postback', 'title': 'Select Branch',
-                                     'value': 'SELECT_BRANCH_2'},
+                                     'value': 'SELECT_BRANCH'},
                                     {'type': 'phone_number', 'title': 'Call Branch', 'value': '+16505551234'},
                                 ])
     ]))
 
 
+#Show hotel room template
 def show_hotel_room(recipient):
     page.send(recipient, Template.Generic([
         Template.GenericElement("Seven Suns Hotel Template",
@@ -301,7 +234,7 @@ def show_hotel_room(recipient):
                                 image_url="http://www.vhotel.sg/Bencoolen/scripts/images/accomodations/rooms/b_twin_display.jpg",
                                 buttons=[
                                     # Template.ButtonWeb("Open Web URL", "https://www.oculus.com/en-us/rift/"),
-                                    Template.ButtonPostBack("Select Room", "SELECT_ROOM_1")
+                                    Template.ButtonPostBack("Select Room", "SELECT_ROOM")
                                     # Template.ButtonPhoneNumber("Call Branch", "+16505551234")
                                 ]),
         Template.GenericElement("Seven Suns Hotel Template",
@@ -312,7 +245,7 @@ def show_hotel_room(recipient):
                                     # {'type': 'web_url', 'title': 'Open Web URL',
                                     #  'value': 'https://www.oculus.com/en-us/rift/'},
                                     {'type': 'postback', 'title': 'Select Room',
-                                     'value': 'SELECT_ROOM_2'},
+                                     'value': 'SELECT_ROOM'},
                                     # {'type': 'phone_number', 'title': 'Call Branch', 'value': '+16505551234'},
                                 ]),
         Template.GenericElement("Seven Suns Hotel Template",
@@ -323,10 +256,68 @@ def show_hotel_room(recipient):
                                     # {'type': 'web_url', 'title': 'Open Web URL',
                                     #  'value': 'https://www.oculus.com/en-us/rift/'},
                                     {'type': 'postback', 'title': 'Select Room',
-                                     'value': 'SELECT_ROOM_3'},
+                                     'value': 'SELECT_ROOM'},
                                     # {'type': 'phone_number', 'title': 'Call Branch', 'value': '+16505551234'},
                                 ])
     ]))
+
+
+# Reciept to show that items have been purchased
+def send_receipt(recipient):
+    receipt_id = "order1357"
+    element = Template.ReceiptElement(title="Hotel Room",
+                                      subtitle="Includes: Bed, Breakfast and Board",
+                                      quantity=1,
+                                      price=75.00,
+                                      currency="USD",
+                                      image_url="http://www.vhotel.sg/Bencoolen/scripts/images/accomodations/rooms/b_twin_display.jpg"
+                                      )
+
+    summary = Template.ReceiptSummary(subtotal=78.99,
+                                      total_tax=2.99,
+                                      total_cost=78.99)
+
+    adjustment = Template.ReceiptAdjustment(name="New Customer Discount", amount=-50)
+
+    page.send(recipient, Template.Receipt(recipient_name='Peter Chang',
+                                          order_number=receipt_id,
+                                          currency='USD',
+                                          payment_method='Visa 1234',
+                                          timestamp="1428444852",
+                                          elements=[element],
+                                          # address=address,
+                                          summary=summary,
+                                          adjustments=[adjustment]))
+
+
+# Quick reply menu to book another room
+def book_another(recipient):
+    page.send(recipient, "Would you like to book another room? 🙂",
+              quick_replies=[QuickReply(title=("Book another room"), payload="BOOK_ANOTHER_ROOM"),
+                             QuickReply(title=("Cancel"), payload="CANCEL"),
+                             QuickReply(title=("Continue with booking"), payload="RESERVATION")],
+              metadata="DEVELOPER_DEFINED_METADATA")
+
+
+#Last messege after reciept has been shown
+def last_messege(recipient):
+    page.send(recipient, "Would you like to continue?",
+              quick_replies=[QuickReply(title=("Book another room"), payload="BOOK_ANOTHER_ROOM"),
+                             QuickReply(title=("Cancel"), payload="CANCEL"),
+                             QuickReply(title=("Start Again"), payload="START_AGAIN")],
+              metadata="DEVELOPER_DEFINED_METADATA")
+
+
+#Run this function to set up a persistent menu
+page.show_persistent_menu([Template.ButtonPostBack('Start Again', 'START_AGAIN_PAYLOAD'),
+                           Template.ButtonPostBack('Cancel', 'CANCEL_PAYLOAD')])
+
+@page.callback(['MENU_PAYLOAD/(.+)'])
+def click_persistent_menu(payload, event):
+  click_menu = payload.split('/')[1]
+  print("you clicked %s menu" % click_menu)
+
+
 
 
 
