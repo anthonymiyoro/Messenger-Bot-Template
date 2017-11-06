@@ -82,7 +82,8 @@ def received_message(event):
             print("quick reply for message %s with payload %s" % (message_id, quick_reply_payload))
 
     if message_text:
-        send_message(sender_id, message_text)
+        # send_message(sender_id, message_text)
+        echo_messege(sender_id)
     elif message_attachments:
         page.send(sender_id, "Message with attachment received")
 
@@ -305,6 +306,13 @@ def last_messege(recipient):
               quick_replies=[QuickReply(title=("Book another room"), payload="BOOK_ANOTHER_ROOM"),
                              QuickReply(title=("Cancel"), payload="CANCEL"),
                              QuickReply(title=("Start Again"), payload="START_AGAIN")],
+              metadata="DEVELOPER_DEFINED_METADATA")
+
+
+def echo_messege(recipient):
+    page.send(recipient, "Would you like to book a hotel room?",
+              quick_replies=[QuickReply(title=("Book a room"), payload="START_AGAIN"),
+                             ],
               metadata="DEVELOPER_DEFINED_METADATA")
 
 
