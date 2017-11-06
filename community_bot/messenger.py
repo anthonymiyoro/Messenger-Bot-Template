@@ -68,7 +68,7 @@ def received_message(event):
         quick_reply_payload = quick_reply.get('payload')
         if quick_reply_payload == 'CONFIRM':
             book_another(sender_id)
-            print("quick reply for message %s with payload %s" % (message_id, quick_reply_payload))
+            # print("quick reply for message %s with payload %s" % (message_id, quick_reply_payload))
 
         elif quick_reply_payload == 'BOOK_ANOTHER_ROOM':
             show_hotel_room(sender_id)
@@ -77,7 +77,7 @@ def received_message(event):
             send_receipt(sender_id)
 
         elif quick_reply_payload == 'CANCEL':
-            show_hotel_room(sender_id)
+            show_branch(sender_id)
         else:
             print("quick reply for message %s with payload %s" % (message_id, quick_reply_payload))
 
