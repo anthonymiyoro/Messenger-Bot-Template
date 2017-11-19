@@ -1,0 +1,15 @@
+{
+  "name": "Hotel Booking Bot Template",
+  "description": "A Hotel Booking Bot running on Flask",
+  "keywords": [
+    "flask",
+    "python",
+    "bot",
+    "messenger"
+  ],
+  "repository": "https://github.com/anthonymiyoro/HotelBotExample",
+}
+
+
+
+https://heroku.com/deploy?template=https://github.com/anthonymiyoro/HotelBotExample

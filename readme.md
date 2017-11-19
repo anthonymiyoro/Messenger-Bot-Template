@@ -1,14 +1,22 @@
-## Facebook Community Bot
+Shopping Bot Template
+====================
 
-### This is a bot that allows members of a developer circle to connect with each other
+A simple Shopping Bot template running on Flask that's ready to run on Heroku.
 
-It has the following functionality;
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/anthonymiyoro/HotelBotExample)
 
-- View previous events, what they entailed and any slides if available.
+## Development Setup
 
-- Remind you of future events, their location and their topics.
+* `virtualenv venv`
 
-- Connect with devs from your community circle via github.
+* `source venv/bin/activate`
 
-Uses Pythons' FBMQ Messenger library with instructions from [here!](https://github.com/conbus/fbmq)
+* `pip install -r requirements.txt`
 
+* `python app.py`
+
+## Deploy
+
+* `heroku create`
+
+* `git push heroku master`
